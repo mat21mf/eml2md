@@ -5,6 +5,21 @@ from email.parser import BytesParser
 from email.policy import default
 from pathlib import Path
 from markdownify import markdownify as md
+from bs4 import BeautifulSoup
+
+# Tags that HTML emails use purely for layout (nested tables to
+# position content), not for real tabular data. markdownify flattens
+# anything inside a <td> onto a single line so it fits a pipe-table
+# cell, which mangles these layout tables into unreadable output.
+# Unwrapping them before conversion keeps the text but drops the
+# table semantics, so line breaks and paragraphs survive.
+LAYOUT_TAGS = ["table", "tr", "td", "tbody", "thead", "tfoot"]
+
+def html_to_md(html):
+    soup = BeautifulSoup(html, "html.parser")
+    for tag in soup.find_all(LAYOUT_TAGS):
+        tag.unwrap()
+    return md(str(soup))
 
 def convert(src, dst=None):
     with open(src, "rb") as f:
@@ -26,7 +41,7 @@ def convert(src, dst=None):
         html = content if ct == "text/html" else None
         text = content if ct == "text/plain" else None
 
-    body = md(html) if html else (text or "")
+    body = html_to_md(html) if html else (text or "")
 
     out = "\n".join([
         f"# {msg.get('Subject', '')}",

@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "eml2md"
 version = "0.1.0"
 requires-python = ">=3.10"
-dependencies = ["markdownify"]
+dependencies = ["markdownify", "beautifulsoup4"]
 
 [project.scripts]
 eml2md = "eml2md.cli:main"
